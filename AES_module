@@ -1,0 +1,40 @@
+from Crypto.Random import get_random_bytes
+from Crypto.Cipher import AES
+from Crypto.Util.Padding import pad, unpad
+
+class AESCipher:
+
+    # block size와 함께 클래스 초기화
+    def __init__(self, bs):
+        self.bs = bs
+        self.sk = get_random_bytes(16)    # 랜덤 바이트열 생성으로 키 생성
+
+    # 암호화 함수
+    def encrypt(self, msg):
+
+        pt = pad(msg.encode(), self.bs)   # 입력 메시지를 패딩하여 block size에 맞게 조정
+        iv = get_random_bytes(16)         # 랜덤 초기화 벡터 생성
+
+        cipher = AES.new(self.sk, AES.MODE_CBC, iv)        # CBC 모드로 AES 객체 생성
+        ct = iv + cipher.encrypt(pt)      # 랜덤 초기화 벡터와 함께 암호문 생성
+        return ct
+
+    # 복호화 함수
+    def decrypt(self, ct, iv):
+    
+        cipher = AES.new(self.sk, AES.MODE_CBC, iv)
+        pt = unpad(cipher.decrypt(ct), self.bs).decode()
+        return pt
+
+
+msg = 'Hello'
+aes = AESCipher(16) # 메시지와 block size를 입력받아 AESCipher 객체 생성
+
+ct = aes.encrypt(msg)
+
+iv = ct[:AES.block_size] # 암호문에서 랜덤 초기화 벡터 추출
+pt = aes.decrypt(ct[AES.block_size:], iv)
+
+
+print(str(ct))
+print(str(pt))
